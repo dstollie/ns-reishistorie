@@ -11,4 +11,10 @@ Vagrant.configure("2") do |config|
     # Optional NFS. Make sure to remove other synced_folder line too
     #config.vm.synced_folder ".", "/var/www", :nfs => { :mount_options => ["dmode=777","fmode=666"] }
 
+    $script = <<-SCRIPT
+    composer self-update
+    SCRIPT
+
+    config.vm.provision "shell", inline: $script
+
 end
