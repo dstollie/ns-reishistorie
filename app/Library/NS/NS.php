@@ -164,13 +164,26 @@ class NS
                     $checkoutLocation = $checkoutLocationInformation;
                 }
 
+                /*
+                 * Get the money back url
+                 */
+                $moreLink = $node->filter('a[class="more"]');
+
+                $moneyBackUrl = null;
+
+                if($moreLink->count()) {
+                    $moneyBackUrl = $node->getUri() . $moreLink->first()->attr('href');
+                }
+
+
                 return (new Journey())
                     ->setDate(Carbon::createFromFormat('d-m-Y',
                         trim($journeyInformation->filterXPath('//td[1]')->text())))
                     ->setCheckinTime($checkinTime)
                     ->setCheckinLocation($checkinLocation)
                     ->setCheckoutTime($checkoutTime)
-                    ->setCheckoutLocation($checkoutLocation);
+                    ->setCheckoutLocation($checkoutLocation)
+                    ->setMoneyBackUrl($moneyBackUrl);
 
             }
 

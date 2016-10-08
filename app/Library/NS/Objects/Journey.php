@@ -9,6 +9,7 @@ class Journey
 	public $date;
 	public $checkinLocation;
 	public $checkoutLocation;
+    public $moneyBackUrl;
 
 	/**
 	 * @param mixed $checkinTime
@@ -59,4 +60,23 @@ class Journey
 		$this->checkoutLocation = $checkoutLocation;
 		return $this;
 	}
+
+    /**
+     * @return mixed
+     */
+    public function getMoneyBackUrl()
+    {
+        return $this->moneyBackUrl;
+    }
+
+    /**
+     * @param mixed $moneyBackUrl
+     * @return Journey
+     */
+    public function setMoneyBackUrl($moneyBackUrl)
+    {
+        $this->moneyBackUrl = $moneyBackUrl;
+        return $this;
+    }
+
 }
