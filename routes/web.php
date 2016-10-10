@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('/', function () {
+Route::get('reishistorie', function () {
 
     if($url = request('money_back_url')) {
         return response()->json(app('ns')->submitMoneyBack($url));
@@ -19,3 +19,4 @@ Route::get('/', function () {
         return response()->json(app('ns')->showReishistorie());
     }
 });
+

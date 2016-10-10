@@ -19,8 +19,8 @@ class NS
 	public function __construct()
 	{
 		$this->credentials = [
-			'email'      => config('ns.email'),
-			'password'   => config('ns.password'),
+			'email' => config('ns.email'),
+			'password' => config('ns.password'),
 			'cardNumber' => config('ns.card_number'),
 //		'JSESSIONID' => 'A9C8488182AF61CF05203EFC69AD8DD6.su025v281-2'
 		];
@@ -59,7 +59,7 @@ class NS
 	{
 		$this->login();
 
-		$crawler = $this->client->request('GET', 'https://www.ns.nl/selfservice/home');
+		$crawler = $this->client->request('GET', 'https://www.ns.nl/selfservice/reishistorie.1');
 
 		$continueButton = $crawler->selectButton('Continue');
 		if ($continueButton->count()) {
@@ -75,120 +75,115 @@ class NS
 		$crawler = $this->start();
 
 		/*
-		 * Click on "Mijn reishistorie (trein)"
-		 */
-		$link = $crawler->selectLink('Mijn reishistorie (trein)')->link();
-		$crawler = $this->client->click($link);
-
-		/*
 		 * Select the right card number and press the search button
 		 */
 		$form = $crawler->selectButton('Zoeken')->form();
 		$crawler = $this->client->submit($form, [
 			'ovcpKaart' => $this->credentials['cardNumber'],
-			'search'    => 'Zoeken'
+			'transactietype' => 'radio56', // Only travel transactions
+			'search' => 'Zoeken'
 		]);
 
 
-		$journeys = $this->recursivelyClickNext($crawler, function(Crawler $crawler) {
-		    return $this->journeyInformation($crawler);
-        });
+		$journeys = $this->recursivelyClickNext($crawler, function (Crawler $crawler) {
+			return $this->journeyInformation($crawler);
+		});
 
-        $journeyCollection = collect($journeys)
-            ->filter(function($journey) { // Filter null values
-            return $journey;
-        })
-            ->filter(function(Journey $journey) { // Filter journeys which do have the same location for checkin as checkout
-            return $journey->checkinLocation != $journey->checkoutLocation;
-        });
+		$journeyCollection = collect($journeys)
+			->filter(function ($journey) { // Filter null values
+				return $journey;
+			})
+			->filter(function (Journey $journey) { // Filter journeys which do have the same location for checkin as checkout
+				return $journey->checkinLocation != $journey->checkoutLocation;
+			});
 
-        return new JourneyHistoryResponse($journeyCollection);
+		return new JourneyHistoryResponse($journeyCollection);
 	}
 
-    /**
-     * Recursively clicks on the "volgende pagina" untill there is no
-     *
-     * @param Crawler $crawler
-     * @param \Closure $fn
-     * @return array|mixed
-     */
+	/**
+	 * Recursively clicks on the "volgende pagina" untill there is no
+	 *
+	 * @param Crawler $crawler
+	 * @param \Closure $fn
+	 * @return array|mixed
+	 */
 	protected function recursivelyClickNext(Crawler $crawler, \Closure $fn)
-    {
-        $journeys = call_user_func($fn, $crawler);
+	{
+		$journeys = call_user_func($fn, $crawler);
 
-        /*
-         * Click on "volgende pagina"
-         */
-        $nextPage = $crawler->selectLink('volgende pagina');
+		/*
+		 * Click on "volgende pagina"
+		 */
+		$nextPage = $crawler->selectLink('volgende pagina');
 
-        if (!$nextPage->count()) {
-            return $journeys;
-        } else {
-            $link = $nextPage->link();
-            $crawler = $this->client->click($link);
+		if (!$nextPage->count()) {
+			return $journeys;
+		} else {
+			$link = $nextPage->link();
+			$crawler = $this->client->click($link);
 
-            return array_merge($journeys, $this->recursivelyClickNext($crawler, $fn));
-        }
-    }
+			return array_merge($journeys, $this->recursivelyClickNext($crawler, $fn));
+		}
+	}
 
 	protected function journeyInformation(Crawler $crawler)
 	{
-	    return $crawler->filter('.history tbody')->each(function (Crawler $node, $i) {
+		return $crawler->filter('.history tbody')->each(function (Crawler $node, $i) {
 
-            // Grab the first tr element with the class "journey". This is the element which contains all the information about the journey
-            $journeyInformation = $node->filterXPath("(//tr[contains(concat(' ', @class, ' '), ' journey ')])[1]");
+			// Grab the first tr element with the class "journey". This is the element which contains all the information about the journey
+			$journeyInformation = $node->filterXPath("(//tr[contains(concat(' ', @class, ' '), ' journey ')])[1]");
 
-            // If the element was not found. There is no journey information in this element. It could be a transaction or something.
-            if ($journeyInformation->count()) {
+			// If the element was not found. There is no journey information in this element. It could be a transaction or something.
+			if ($journeyInformation->count()) {
 
-                $locationInformation = $journeyInformation->filterXPath('//td[2]');
-                $checkinLocationInformation = trim($locationInformation->filterXPath('//span[1]')->text());
-                $checkoutLocationInformation = trim($locationInformation->filterXPath('//span[2]')->text());
+				$locationInformation = $journeyInformation->filterXPath('//td[2]');
+				$checkinLocationInformation = trim($locationInformation->filterXPath('//span[1]')->text());
+				$checkoutLocationInformation = trim($locationInformation->filterXPath('//span[2]')->text());
 
-                // Check for the format "12:12 City"
-                $locationInformationRegex = "/([0-9]){2}:([0-9]){2} ([a-z].*|[A-Z].*)/";
+				// Check for the format "12:12 City"
+				$locationInformationRegex = "/([0-9]){2}:([0-9]){2} ([a-z].*|[A-Z].*)/";
 
-                if (preg_match($locationInformationRegex, $checkinLocationInformation)) {
-                    $checkinTime = explode(' ', $checkinLocationInformation)[0];
-                    $checkinLocation = explode(' ', $checkinLocationInformation)[1];
-                } else {
-                    $checkinTime = null;
-                    $checkinLocation = $checkinLocationInformation;
-                }
+				if (preg_match($locationInformationRegex, $checkinLocationInformation)) {
+					$checkinTime = explode(' ', $checkinLocationInformation)[0];
+					$checkinLocation = explode(' ', $checkinLocationInformation)[1];
+				} else {
+					$checkinTime = null;
+					$checkinLocation = $checkinLocationInformation;
+				}
 
-                if (preg_match($locationInformationRegex, $checkoutLocationInformation)) {
-                    $checkoutTime = explode(' ', $checkoutLocationInformation)[0];
-                    $checkoutLocation = explode(' ', $checkoutLocationInformation)[1];
-                } else {
-                    $checkoutTime = null;
-                    $checkoutLocation = $checkoutLocationInformation;
-                }
+				if (preg_match($locationInformationRegex, $checkoutLocationInformation)) {
+					$checkoutTime = explode(' ', $checkoutLocationInformation)[0];
+					$checkoutLocation = explode(' ', $checkoutLocationInformation)[1];
+				} else {
+					$checkoutTime = null;
+					$checkoutLocation = $checkoutLocationInformation;
+				}
 
-                /*
-                 * Get the money back url
-                 */
-                $moreLink = $node->filter('a[class="more"]');
+				/*
+				 * Get the money back url
+				 */
+				$moreLink = $node->filter('a[class="more"]');
 
-                $moneyBackUrl = null;
+				$moneyBackUrl = null;
 
-                if($moreLink->count()) {
-                    $moneyBackUrl = $node->getUri() . $moreLink->first()->attr('href');
-                }
+				if ($moreLink->count()) {
+					$moneyBackUrl = $node->getUri() . $moreLink->first()->attr('href');
+				}
 
 
-                return (new Journey())
-                    ->setDate(Carbon::createFromFormat('d-m-Y',
-                        trim($journeyInformation->filterXPath('//td[1]')->text())))
-                    ->setCheckinTime($checkinTime)
-                    ->setCheckinLocation($checkinLocation)
-                    ->setCheckoutTime($checkoutTime)
-                    ->setCheckoutLocation($checkoutLocation)
-                    ->setMoneyBackUrl($moneyBackUrl);
+				return (new Journey())
+					->setDate(Carbon::createFromFormat('d-m-Y',
+						trim($journeyInformation->filterXPath('//td[1]')->text())))
+					->setCheckinTime($checkinTime)
+					->setCheckinLocation($checkinLocation)
+					->setCheckoutTime($checkoutTime)
+					->setCheckoutLocation($checkoutLocation)
+					->setMoneyBackUrl($moneyBackUrl);
 
-            }
+			}
 
-            return null;
-        });
+			return null;
+		});
 	}
 
 	protected function isLoggedIn()
