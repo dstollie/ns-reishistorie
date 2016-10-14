@@ -7,11 +7,11 @@
             <input @click="load" type="button" value="send">
         </fieldset>
 
-        <pre><code class="language-json" v-html="apiOutput"></code></pre>
-
         <p v-if="loading">Data ophalen ...</p>
 
-        <!--<pre><code class="language-php" v-html="test"></code></pre>-->
+        <h2>Status: {{ status }}</h2>
+
+        <pre><code class="language-json" v-html="apiOutput"></code></pre>
 
     </form>
 </template>
@@ -27,11 +27,16 @@
                     toStation: 'Zwolle',
                     dateTime: '2016-10-11T20:00'
                 },
-                apiOutput: "{ test: 'test'}",
+                apiOutput: null,
                 test: 'echo "test"',
                 loading: false
             }
 
+        },
+        computed: {
+            status() {
+                return this.apiOutput ? this.apiOutput.ReisMogelijkheid.Status : null
+            }
         },
         methods: {
 
@@ -44,7 +49,11 @@
                     this.loading = false;
 
                     response.json().then(content => {
-                        this.apiOutput = content
+                        this.apiOutput = content;
+
+                        Vue.nextTick(()=> {
+                            window.Prism.highlightAll()
+                        })
                     })
                 }, response => {
                     this.loading = false;

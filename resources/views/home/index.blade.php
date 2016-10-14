@@ -13,6 +13,7 @@
 </div>
 
 <script type="application/javascript" src="{{ asset('js/app.js') }}"></script>
+<script type="application/javascript" src="{{ asset('js/prism.js') }}"></script>
 <script>
     window.Laravel = { csrfToken: '{{ csrf_token() }}' };
 </script>

@@ -33,5 +33,6 @@ Elixir.ready(function () {
 
 elixir(mix => {
 	mix.sass('app.scss')
+		.scripts('prism.js')
 		.webpack('app.js');
 });
