@@ -70,7 +70,7 @@ class NS
 		return $crawler;
 	}
 
-	public function showReishistorie()
+	public function showHistory($limit)
 	{
 		$crawler = $this->start();
 
@@ -80,7 +80,7 @@ class NS
 		$form = $crawler->selectButton('Zoeken')->form();
 		$crawler = $this->client->submit($form, [
 			'ovcpKaart' => $this->credentials['cardNumber'],
-			'transactietype' => 'radio56', // Only travel transactions
+//			'transactietype' => 'radio56', // Only travel transactions
 			'search' => 'Zoeken'
 		]);
 
@@ -97,8 +97,14 @@ class NS
 				return $journey->checkinLocation != $journey->checkoutLocation;
 			});
 
-		return new JourneyHistoryResponse($journeyCollection);
+		return new JourneyHistoryResponse($journeyCollection->take($limit));
 	}
+
+	public function showDelayedHistory($limit)
+	{
+		return $this->showHistory($limit);
+	}
+
 
 	/**
 	 * Recursively clicks on the "volgende pagina" untill there is no

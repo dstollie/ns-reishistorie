@@ -1,6 +1,24 @@
 const elixir = require('laravel-elixir');
 
-require('laravel-elixir-vue');
+require('laravel-elixir-vue-2');
+
+Elixir.ready(function () {
+	Elixir.webpack.mergeConfig({
+		module: {
+			loaders: [
+				{
+					test: /\.js$/,
+					loader: 'babel',
+					exclude: /node_modules/
+				},
+				{
+					test: /\.css$/,
+					loader: 'style!css'
+				}
+			]
+		}
+	})
+});
 
 /*
  |--------------------------------------------------------------------------
@@ -14,6 +32,6 @@ require('laravel-elixir-vue');
  */
 
 elixir(mix => {
-    mix.sass('app.scss')
-       .webpack('app.js');
+	mix.sass('app.scss')
+		.webpack('app.js');
 });

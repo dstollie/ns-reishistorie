@@ -18,5 +18,9 @@ return [
      */
     'bank_account_number' => env('BANK_ACCOUNT_NUMBER'),
     'bank_account_holder' => env('BANK_ACCOUNT_HOLDER'),
-    'bank_account_holder_city' => env('BANK_ACCOUNT_HOLDER_CITY')
+    'bank_account_holder_city' => env('BANK_ACCOUNT_HOLDER_CITY'),
+
+	'api' => [
+		'auth' => [env('NS_API_USERNAME'), env('NS_API_PASSWORD')]
+	]
 ];

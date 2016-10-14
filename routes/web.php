@@ -11,12 +11,4 @@
 |
 */
 
-Route::get('reishistorie', function () {
-
-    if($url = request('money_back_url')) {
-        return response()->json(app('ns')->submitMoneyBack($url));
-    } else {
-        return response()->json(app('ns')->showReishistorie());
-    }
-});
-
+Route::get('/', 'HomeController@index');
