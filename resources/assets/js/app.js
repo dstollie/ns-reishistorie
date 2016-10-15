@@ -20,6 +20,8 @@ import JourneyHistory from './components/JourneyHistory.vue'
  * the application, or feel free to tweak this setup for your needs.
  */
 
+const bus = new Vue();
+
 const app = new Vue({
 	el: '#app',
 	components: {
