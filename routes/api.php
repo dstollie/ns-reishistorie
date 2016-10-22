@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 |
 */
 
+use Illuminate\Foundation\Validation\ValidatesRequests;
+
 Route::get('/user', function (Request $request) {
 	return $request->user();
 })->middleware('auth:api');
@@ -51,7 +53,14 @@ Route::get('plan', function (Request $request) {
 	$xml = simplexml_load_string($body);
 	$json = json_decode(json_encode($xml), true);
 
-	return $json;
 
+	return response()->json($json);
+});
+
+Route::group(['prefix' => 'stored-journeys'], function () {
+
+	Route::get('/', 'Api\StoredJourneys@index');
+	Route::post('/', 'Api\StoredJourneys@store');
+	Route::post('/remove', 'Api\StoredJourneys@remove');
 
 });

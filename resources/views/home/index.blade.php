@@ -12,9 +12,9 @@
     <journey-history></journey-history>
 </div>
 
-<script type="application/javascript" src="{{ asset('js/app.js') }}"></script>
-<script type="application/javascript" src="{{ asset('js/prism.js') }}"></script>
 <script>
     window.Laravel = { csrfToken: '{{ csrf_token() }}' };
 </script>
+<script type="application/javascript" src="{{ asset('js/app.js') }}"></script>
+<script type="application/javascript" src="{{ asset('js/prism.js') }}"></script>
 </body>

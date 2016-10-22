@@ -13,6 +13,8 @@ Vagrant.configure("2") do |config|
 
     $script = <<-SCRIPT
     composer self-update
+    # SET PHP always_populate_raw_post_data To -1 to avoid a warning
+    sudo sed -i 's/.*always_populate_raw_post_data.*/always_populate_raw_post_data = -1/' /etc/php5/apache2/php.ini
     SCRIPT
 
     config.vm.provision "shell", inline: $script

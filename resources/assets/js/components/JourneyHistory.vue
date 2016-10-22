@@ -13,13 +13,13 @@
 
         <div class="row">
             <div class="col-md-6">
-                <stored-journeys v-on:restore="restoreSession" v-on:remove="removeSession"
-                                 :sessions="sessions"></stored-journeys>
-            </div>
-            <div class="col-md-6">
                 <h2>Status: {{ status }}</h2>
 
                 <pre><code class="language-json" v-html="apiOutput"></code></pre>
+            </div>
+            <div class="col-md-6">
+                <stored-journeys v-on:restore="restoreSession" v-on:remove="removeSession"
+                                 :sessions="sessions"></stored-journeys>
             </div>
         </div>
 
@@ -36,11 +36,7 @@
             StoredJourneys
         },
         mounted() {
-            let storedJourneys = window.localStorage.getItem('sessions');
-
-            if (storedJourneys) {
-                this.sessions = JSON.parse(storedJourneys);
-            }
+            this.loadStoredJourneys();
         },
         watch: {
             'apiOutput': () => {
@@ -96,6 +92,19 @@
                     this.loading = false;
                 })
             },
+            loadStoredJourneys() {
+                this.loading = true;
+
+                this.$http.get('/api/stored-journeys').then(response => {
+                    response.json().then(content => {
+                        this.loading = false;
+
+                        this.sessions = content;
+                    }, response => {
+                        this.loading = false;
+                    })
+                })
+            },
             restoreSession(session) {
                 this.journeyInformation = session;
             },
@@ -103,9 +112,29 @@
                 this.sessions = _.reject(this.sessions, (session, index) => {
                     return sessionIndex == index;
                 });
+
+                this.loading = true;
+
+                this.$http.post('/api/stored-journeys/remove', JSON.parse(JSON.stringify(this.sessions[sessionIndex]))).then(response => {
+                    response.json().then(() => {
+                        this.loadStoredJourneys();
+                    }, () => {
+                        this.loading = false;
+                    }).bind(this)
+                }).bind(this);
             },
             saveSession() {
                 this.sessions.push(JSON.parse(JSON.stringify(this.journeyInformation)));
+
+                this.loading = true;
+
+                this.$http.post('/api/stored-journeys', JSON.parse(JSON.stringify(this.journeyInformation))).then(response => {
+                    response.json().then(() => {
+                        this.loadStoredJourneys();
+                    }, () => {
+                        this.loading = false;
+                    }).bind(this)
+                }).bind(this);
             }
         }
     }
